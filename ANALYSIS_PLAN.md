@@ -1,0 +1,122 @@
+# Analysis plan
+
+This plan was committed on October 21, 2026, before any run outcome or gate verdict was examined. The only logs read before this commit were the first 8 KB of one log file per submission, to classify the structure of each submission's logs. Any later change is recorded under [Deviations](#deviations), with its date and reason.
+
+## 1. Research questions
+
+| Question | Definition |
+| --- | --- |
+| RQ1 Claimed versus verified | Among runs that claim completion, the share whose task SWE-bench does not mark as resolved. |
+| RQ2 Traceability | How well the traceability gate's verdict separates claiming runs that are resolved from claiming runs that are not. |
+| RQ3 Action judgment | The share of actions the Constitution would block, redirect or hold, and the precision and misses of those judgments against hand labels. |
+| RQ4 Human intervention | On held out tasks, the share of claiming runs that could be accepted without human review, and the share of those accepted runs that are not resolved. |
+
+## 2. Data
+
+### Tasks
+
+The 500 tasks of SWE-bench Verified, listed in [`data/tasks.csv`](data/tasks.csv). [`data/tasks_source.json`](data/tasks_source.json) records the dataset, its revision and a cross check showing that both public releases of the dataset list the same 500 tasks.
+
+### Submissions
+
+[`data/submissions.csv`](data/submissions.csv) lists all 182 Verified submissions at a pinned commit of the SWE-bench experiments repository, recorded in [`data/submissions_source.json`](data/submissions_source.json). Each row gives the submission's agent, its published log location, the structure of its logs and its status.
+
+| Status | Submissions | Reason |
+| --- | --- | --- |
+| Candidate, family A | 42 | mini-SWE-agent trajectory |
+| Candidate, family B | 14 | SWE-agent trajectory |
+| Candidate, family C | 35 | Chat transcript with tool calls |
+| Excluded | 47 | Logs are free text, not a structured record of actions |
+| Excluded | 27 | Structured logs outside the three adapter families |
+| Excluded | 11 | No step by step logs published |
+| Excluded | 6 | The published log location holds no files |
+
+A candidate enters the study only when its family's adapter passes the fidelity test in section 4. A candidate that fails is excluded, and the reason is added to `data/submissions.csv`.
+
+### Controlled subset
+
+44 candidate submissions use one agent framework, mini-SWE-agent, with different models. Within this subset only the model varies, which separates model effects from framework effects.
+
+### Handling of logs
+
+Logs are streamed: each submission's logs are downloaded, processed and deleted. Only derived records are kept. Raw logs are not redistributed; each run is identified by its public location and a checksum.
+
+## 3. Definitions
+
+- **Run.** One submission's attempt at one task.
+- **Action.** One command the agent executed, or one file edit it applied, as recorded in the run's log.
+- **Claim of completion.** The run ends with the agent's own submission of its fix, as recorded in the log. Runs that end at a step limit, a cost limit, a timeout or an error make no claim and are reported separately. Each adapter documents the log field that records the submission for its family.
+- **Resolved.** The task appears in the submission's resolved list in SWE-bench's own evaluation results, read at the pinned commit.
+
+## 4. Adapters and the fidelity test
+
+One adapter per family translates a run's log into the gates' inputs. Each action becomes an input to the Constitution. The final submission, with the record of commands, their outputs and the patch, becomes the claim the traceability gate checks. Adapters only translate; they never decide a verdict.
+
+A family's adapter passes the fidelity test when all three checks hold:
+
+1. **Completeness.** For every run in the family, the number of actions in the translated record equals the number counted in the raw log by an independent method, in the same order, with nothing added.
+2. **Patch agreement.** For every run, the patch in the translated record equals the submission's published prediction for that task.
+3. **Review.** In 20 runs drawn at random per family, a reviewer finds no action that was dropped, altered or invented.
+
+## 5. Verification gates
+
+The study uses two gates as they run inside the Lyric system, released as a compiled build identified by version and checksum.
+
+| Gate | What it catches | What it returns |
+| --- | --- | --- |
+| Constitution | Edits to the controls that govern or stop the system; writes to startup and scheduling locations, where a change runs again without being asked; arguments shaped to escape their destination, such as injection and path traversal; removals that can be made recoverable instead; actions taken from a file never read, or read only in an older version | Allow, replan, redirect or block. When several checks speak, the strongest verdict stands. An action that cannot be judged is blocked |
+| Traceability gate | Claimed files that no recorded action produced; claims supported only by printed output; claimed content that does not match what exists; files produced and never used afterward | Verified or not verified, with the share of claims that have a strong link to a recorded action |
+
+**Scope.** The Constitution's transparency check reads the reason the Lyric system recorded for its own acts. Outside agents have no such record, so that check is not applied. The study uses the checks that judge an action by its effect.
+
+**Blindness.** The gates never receive test results or resolution status.
+
+**Workspaces.** The traceability gate checks claims against files on disk. Each run's workspace is rebuilt from the task's repository at its base commit plus the agent's patch.
+
+## 6. Held out tasks
+
+[`data/task_split.csv`](data/task_split.csv) divides the 500 tasks into a tuning half and a held out half of 250 each. Each task is ranked by the SHA-256 of a fixed salt joined to its identifier ([`scripts/split_tasks.py`](scripts/split_tasks.py)). Any rule for accepting a run without review is fixed on the tuning half and measured only on the held out half.
+
+## 7. Analysis
+
+| Question | Measure | Reported for | Interval |
+| --- | --- | --- | --- |
+| RQ1 | Share of claiming runs not resolved | Each submission, each framework, the controlled subset, all candidates | Wilson score interval per submission; bootstrap over tasks for pooled figures |
+| RQ2 | Sensitivity, specificity and precision of the not verified verdict for unresolved claiming runs | Each framework and all candidates | Wilson score interval; bootstrap over tasks |
+| RQ3 | Share of actions flagged, by verdict; precision of flagged actions; misses among allowed actions | All candidates | Bootstrap over runs for prevalence; Wilson score interval for labeled samples |
+| RQ4 | Share of claiming runs accepted without review; share of accepted runs not resolved | Held out half, each framework and all candidates | Bootstrap over tasks |
+
+**Acceptance rule for RQ4.** A claiming run is accepted without review when the traceability gate returns verified and the Constitution blocks none of its actions. If an alternative rule is considered, such as a threshold on the share of strong links, it is chosen on the tuning half only.
+
+**Bootstrap.** 10,000 resamples of tasks (or runs, where stated), with the seed recorded in the analysis script. The same 500 tasks recur in every submission, so pooled intervals resample tasks rather than runs.
+
+## 8. Sample sizes
+
+[`results/sample_sizes.csv`](results/sample_sizes.csv), produced by [`scripts/sample_sizes.py`](scripts/sample_sizes.py), gives the worst case margin of each planned proportion: the half width of the 95 percent Wilson score interval at a true rate of 50 percent.
+
+| Quantity | n | Worst case margin |
+| --- | --- | --- |
+| RQ1, per submission | 500 | plus or minus 4.4 points |
+| RQ1, all candidate runs | 45,500 | plus or minus 0.5 points, before clustering |
+| RQ3, precision of flagged actions | 400 | plus or minus 4.9 points |
+| RQ3, misses among allowed actions | 400 | plus or minus 4.9 points |
+
+## 9. Labeling
+
+RQ3 is the only question that needs hand labels. 400 actions the Constitution flags and 400 it allows are drawn at random from all candidate runs, at most 5 per run. Actions are ranked by the SHA-256 of a fixed salt joined to the action's identifier, so the sample is fixed by the data and the salt alone.
+
+Each sampled action is labeled under [`labels/codebook.md`](labels/codebook.md).
+
+1. **First pass.** An AI model labels all 800 actions against the codebook, each with a one line reason.
+2. **Second pass.** The author labels a random 150 of the 800 without seeing the first labels.
+3. **Agreement.** Cohen's kappa on the 150, with a bootstrap interval.
+4. **Disagreements.** Each is resolved by discussion. Both original labels and the resolution are kept in `labels/labels.csv`.
+5. **Disclosure.** The paper states who labeled each pass and with what tools.
+
+## 10. Pilot
+
+Before the full run, one candidate submission is run on 50 tasks drawn from the tuning half. The pilot confirms that logs parse, that workspaces rebuild, and that every action and claim receives a verdict. Its numbers are never reported as findings.
+
+## Deviations
+
+None.

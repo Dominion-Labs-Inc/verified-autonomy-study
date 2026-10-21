@@ -1,0 +1,17 @@
+{
+  "repository": "SWE-bench/experiments",
+  "commit": "40f164d5b8f1d249bf95a6df8b74b577fd8e519d",
+  "split": "evaluation/verified",
+  "submissions": 182,
+  "candidates": 91,
+  "counts": {
+    "family A": 42,
+    "family B": 14,
+    "family C": 35,
+    "logs are free text, not a structured record of actions": 47,
+    "no step by step logs published": 11,
+    "published log location holds no files": 6,
+    "structured logs outside the three adapter families": 27
+  },
+  "fetched_utc": "2026-10-21T13:01:25Z"
+}

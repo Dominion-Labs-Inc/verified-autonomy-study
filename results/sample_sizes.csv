@@ -1,0 +1,5 @@
+quantity,n,worst_case_margin_points
+"RQ1 unconfirmed completion claims, per model",500,4.4
+"RQ1 unconfirmed completion claims, all candidate runs",45500,0.5
+RQ3 precision of flagged actions,400,4.9
+RQ3 misses among allowed actions,400,4.9

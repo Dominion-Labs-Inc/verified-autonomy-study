@@ -1,0 +1,9 @@
+{
+  "dataset": "SWE-bench/SWE-bench_Verified",
+  "dataset_revision": "78f471bf655a3137b2e8a75af1501690ec009ec3",
+  "cross_checked_against": "princeton-nlp/SWE-bench_Verified",
+  "cross_check_revision": "c104f840cc67f8b6eec6f759ebc8b2693d585d4a",
+  "split": "test",
+  "tasks": 500,
+  "fetched_utc": "2026-10-21T13:00:16Z"
+}
