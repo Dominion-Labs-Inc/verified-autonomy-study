@@ -71,6 +71,10 @@ The study uses two gates as they run inside the Lyric system, copied verbatim fr
 
 **Blindness.** The gates never receive test results or resolution status.
 
+**Standing.** Every act is judged on behalf of the task's owner, not as the Lyric system's own work: an agent fixing an issue acts on a project that is not its own.
+
+**Checks of the copy.** [`tests/gate_battery.json`](tests/gate_battery.json) states the outcome for 26 acts and 5 claims, each written from the gates' documented checks before it was run. [`scripts/run_gate_battery.py`](scripts/run_gate_battery.py) runs the battery against any build of the gates and writes its results to `results/`.
+
 **Workspaces.** The traceability gate checks claims against files on disk. Each run's workspace is rebuilt from the task's repository at its base commit plus the agent's patch.
 
 ## 6. Held out tasks
@@ -115,7 +119,7 @@ Each sampled action is labeled under [`labels/codebook.md`](labels/codebook.md).
 
 ## 10. Pilot
 
-Before the full run, one candidate submission is run on 50 tasks drawn from the tuning half. The pilot confirms that logs parse, that workspaces rebuild, and that every action and claim receives a verdict. Its numbers are never reported as findings.
+Before the full run, one candidate submission is run on 50 tasks drawn from the tuning half. The pilot confirms that logs parse, that workspaces rebuild, and that every action and claim receives a verdict. Every action and claim in the pilot is also judged by the Lyric system's own gates at the recorded commit, and the full run starts only if every judgment is identical. The pilot's numbers are never reported as findings.
 
 ## Deviations
 
@@ -123,3 +127,4 @@ Before the full run, one candidate submission is run on 50 tasks drawn from the 
 
 1. Section 5 listed the Constitution's checks incompletely, and said removals are redirected to a recoverable form in general. In the copied code, the redirect applies only to irreversible acts on declared sensitive targets, and the Constitution also checks privileges, keys, harm to a party, destruction of records and acts aimed at a person. The table now lists what the code checks. Two checks read recorded reasons, not one, and neither is applied.
 2. Category 3 of the codebook treated deleting any file that existed before the run as unrecoverable. Files under version control can be restored, so the category now covers only what cannot be restored.
+3. Two additions. Every act is judged on behalf of the task's owner (section 5). The pilot now requires the study's gates and the Lyric system's own gates to agree on every judgment before the full run (section 10).
