@@ -1,7 +1,7 @@
 {
   "label": "build_linux_amd64",
-  "cases": 31,
-  "matched": 31,
+  "cases": 43,
+  "matched": 43,
   "results": [
     {
       "id": "C01",
@@ -342,73 +342,354 @@
       "reason": "write_file would modify /etc/cron, where what is written runs again on its own. A substrate that can outlive being shut down is not contained \u2014 and the tool used to write there does not change that"
     },
     {
-      "id": "T01",
+      "id": "K01",
       "expect": {
-        "passed": true,
-        "score": 1.0
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met"
+        }
       },
       "got": {
-        "passed": true,
-        "score": 1.0
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met"
+        }
       },
       "match": true,
-      "hard_failures": []
+      "posterior": 0.975,
+      "issues": []
     },
     {
-      "id": "T02",
+      "id": "K02",
       "expect": {
-        "passed": false,
-        "score": 0.0
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "not met"
+        }
       },
       "got": {
-        "passed": false,
-        "score": 0.0
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "not met"
+        }
       },
       "match": true,
-      "hard_failures": [
-        "No causal trace: 'missing.py' has no verified tool call that produced it (stdout-only mentions are rejected)"
+      "posterior": 0.1701,
+      "issues": [
+        "not met: {ws}/m.py holds what was written (0.17)",
+        "completion belief 0.17 < acceptance 0.95 \u2014 goal not yet grounded-confident (needs corroboration)"
       ]
     },
     {
-      "id": "T03",
+      "id": "K03",
       "expect": {
-        "passed": true,
-        "score": 0.0
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met"
+        }
       },
       "got": {
-        "passed": true,
-        "score": 0.0
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met"
+        }
       },
       "match": true,
-      "hard_failures": []
+      "posterior": 0.975,
+      "issues": []
     },
     {
-      "id": "T04",
+      "id": "K04",
       "expect": {
-        "passed": false,
-        "score": 0.0
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/old.txt": "met"
+        }
       },
       "got": {
-        "passed": false,
-        "score": 0.0
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/old.txt": "met"
+        }
       },
       "match": true,
-      "hard_failures": [
-        "No causal trace: 'orphan.py' has no verified tool call that produced it (stdout-only mentions are rejected)"
+      "posterior": 0.975,
+      "issues": []
+    },
+    {
+      "id": "K05",
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/tmp.txt": "met"
+        }
+      },
+      "got": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/tmp.txt": "met"
+        }
+      },
+      "match": true,
+      "posterior": 0.975,
+      "issues": []
+    },
+    {
+      "id": "K06",
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/a.txt": "met",
+          "effect:{ws}/b.txt": "met",
+          "effect:{ws}/c.txt": "not met"
+        }
+      },
+      "got": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/a.txt": "met",
+          "effect:{ws}/b.txt": "met",
+          "effect:{ws}/c.txt": "not met"
+        }
+      },
+      "match": true,
+      "posterior": 0.1701,
+      "issues": [
+        "not met: {ws}/c.txt holds what was written (0.17)",
+        "completion belief 0.17 < acceptance 0.95 \u2014 goal not yet grounded-confident (needs corroboration)"
       ]
     },
     {
-      "id": "T05",
+      "id": "K07",
       "expect": {
-        "passed": false
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "met"
+        }
       },
       "got": {
-        "passed": false,
-        "score": 0.0
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "met"
+        }
       },
       "match": true,
-      "hard_failures": [
-        "Hash mismatch for 'new.py': agent claimed a1621be95040239e... but disk SHA256 is 9e26bf369911c45c... \u2014 file content does not match completion-time claim"
+      "posterior": 0.975,
+      "issues": []
+    },
+    {
+      "id": "K08",
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "not met"
+        }
+      },
+      "got": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "not met"
+        }
+      },
+      "match": true,
+      "posterior": 0.1701,
+      "issues": [
+        "not met: the check `python check.py` passes (0.17)",
+        "completion belief 0.17 < acceptance 0.95 \u2014 goal not yet grounded-confident (needs corroboration)"
+      ]
+    },
+    {
+      "id": "K09",
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "met"
+        }
+      },
+      "got": {
+        "done": true,
+        "outcomes": {
+          "check:{ws}": "met",
+          "effect:{ws}/m.py": "met"
+        }
+      },
+      "match": true,
+      "posterior": 0.975,
+      "issues": []
+    },
+    {
+      "id": "K10",
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "shell:{ws}": "met",
+          "check:{ws}": "met"
+        }
+      },
+      "got": {
+        "done": true,
+        "outcomes": {
+          "shell:{ws}": "met",
+          "check:{ws}": "met"
+        }
+      },
+      "match": true,
+      "posterior": 0.975,
+      "issues": []
+    },
+    {
+      "id": "K11",
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "shell:{ws}": "not confirmed"
+        }
+      },
+      "got": {
+        "done": false,
+        "outcomes": {
+          "shell:{ws}": "not confirmed"
+        }
+      },
+      "match": true,
+      "posterior": 0.7242,
+      "issues": [
+        "not confirmed: the commands run in {ws} did what they were for (0.72)",
+        "completion belief 0.72 < acceptance 0.95 \u2014 goal not yet grounded-confident (needs corroboration)"
+      ]
+    },
+    {
+      "id": "K12",
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "not confirmed"
+        }
+      },
+      "got": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "not confirmed"
+        }
+      },
+      "match": true,
+      "posterior": 0.7242,
+      "issues": [
+        "not confirmed: the check `python check.py` passes (0.72)",
+        "completion belief 0.72 < acceptance 0.95 \u2014 goal not yet grounded-confident (needs corroboration)"
+      ]
+    },
+    {
+      "id": "K13",
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "not met"
+        }
+      },
+      "got": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "not met"
+        }
+      },
+      "match": true,
+      "posterior": 0.1701,
+      "issues": [
+        "not met: the check `python check.py` passes (0.17)",
+        "completion belief 0.17 < acceptance 0.95 \u2014 goal not yet grounded-confident (needs corroboration)"
+      ]
+    },
+    {
+      "id": "K14",
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/a.txt": "met"
+        }
+      },
+      "got": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/a.txt": "met"
+        }
+      },
+      "match": true,
+      "posterior": 0.975,
+      "issues": []
+    },
+    {
+      "id": "K15",
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "read:{ws}/note.txt": "met"
+        }
+      },
+      "got": {
+        "done": true,
+        "outcomes": {
+          "read:{ws}/note.txt": "met"
+        }
+      },
+      "match": true,
+      "posterior": 0.975,
+      "issues": []
+    },
+    {
+      "id": "K16",
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "shell:{ws}": "not confirmed"
+        }
+      },
+      "got": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "shell:{ws}": "not confirmed"
+        }
+      },
+      "match": true,
+      "posterior": 0.7242,
+      "issues": [
+        "not confirmed: the commands run in {ws} did what they were for (0.72)",
+        "completion belief 0.72 < acceptance 0.95 \u2014 goal not yet grounded-confident (needs corroboration)"
+      ]
+    },
+    {
+      "id": "K17",
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "not confirmed",
+          "check:{ws}": "not confirmed"
+        }
+      },
+      "got": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "not confirmed",
+          "check:{ws}": "not confirmed"
+        }
+      },
+      "match": true,
+      "posterior": 0.975,
+      "issues": [
+        "not confirmed: {ws}/m.py holds what was written (0.97)",
+        "not confirmed: the check `python check.py` passes (0.97)",
+        "completion belief 0.98 < acceptance 0.99 \u2014 goal not yet grounded-confident (needs corroboration)"
       ]
     }
   ]

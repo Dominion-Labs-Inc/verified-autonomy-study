@@ -4,9 +4,11 @@ Usage: python3 scripts/run_gate_battery.py <directory holding study_gates> <labe
 
 Each case runs in a fresh workspace with a fresh RunGates. Acts listed under
 'before' are judged and, when allowed, reported as executed; 'change' rewrites a
-file on disk. Writes results/gate_battery_<label>.json and exits nonzero on any
-difference from the stated verdicts. Clock times inside reasons are written as
-{time}, so two runs of the same build produce identical files.
+file on disk. Completion cases build each act's record with the gates' own record
+builder, apply what the act did to the workspace, and give the check's re-run the
+stated exit code, the same for every build. Writes results/gate_battery_<label>.json
+and exits nonzero on any difference from the stated verdicts. Clock times inside
+reasons are written as {time}, so two runs of the same build produce identical files.
 """
 
 import asyncio
@@ -16,7 +18,6 @@ import re
 import sys
 import tempfile
 import time
-import types
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -58,34 +59,59 @@ async def run_case(RunGates, battery, case):
                 "match": got == case["expect"], "reason": reason}
 
 
-def run_trace_case(RunGates, case):
+def records_for(case, ws, run_record, text_digest):
+    """Each act's record, built by the gates' own builder, with what it did applied to the workspace."""
+    for name, content in case["files"].items():
+        Path(ws, name).write_text(content)
+    records = []
+    for tool, args, said in fill(case["acts"], ws):
+        ran = {"success": said["success"], "error": said.get("error")}
+        if said["success"]:
+            output = {}
+            if "wrote" in said:
+                if said.get("lands", True):
+                    Path(args["file_path"]).write_text(said["wrote"])
+                output = {"file_path": args["file_path"], "content_digest": text_digest(said["wrote"])}
+            elif tool == "delete_file":
+                Path(args["path"]).unlink()
+            elif tool == "read_file":
+                text = Path(args["file_path"]).read_text()
+                output = {"file_path": args["file_path"], "content": text, "size_bytes": len(text.encode("utf-8"))}
+            ran["output"] = output
+        records.append(run_record(tool, args, ran))
+    for name, content in case.get("end", {}).items():
+        Path(ws, name).write_text(content)
+    return records
+
+
+async def run_completion_case(gates_module, case):
     with tempfile.TemporaryDirectory() as tmp:
         ws = os.path.realpath(tmp)
-        start = time.time()
-        for name, (content, offset) in case["files"].items():
-            target = Path(ws, name)
-            target.write_text(content)
-            os.utime(target, (start + offset, start + offset))
-        gates = RunGates(ws)
-        claims = case["claims"]
-        proposal = types.SimpleNamespace(
-            files_created=claims.get("files_created", []), files_modified=claims.get("files_modified", []),
-            artifact_hashes=claims.get("artifact_hashes", {}), summary="", claimed_outputs={})
-        tool_results = [dict(r, timestamp=start + r["timestamp"]) for r in case["tool_results"]]
-        result = gates.verify_claim(proposal, "EXECUTION", tool_results)
-        got = {"passed": bool(result.passed), "score": round(float(result.score), 4)}
-        match = all(got[k] == v for k, v in case["expect"].items())
-        failures = [f.replace(ws, "{ws}") for f in (result.hard_failures or [])]
-        return {"id": case["id"], "expect": case["expect"], "got": got, "match": match, "hard_failures": failures}
+        rerun = None
+        if "rerun" in case:
+            async def rerun(check, code=case["rerun"]):
+                return {"exit_code": code, "seconds": 0.0}
+        records = records_for(case, ws, gates_module.run_record, gates_module.text_digest)
+        bar = case.get("verify_bar", gates_module.NO_DOUBT)
+        got = await gates_module.RunGates(ws, rerun=rerun).completion(records, "fix the issue", bar)
+        # Lyric's acceptance band: 0.95, raised toward 0.99 by caution.
+        accept = 0.95 + 0.04 * (bar / 0.85)
+        outcomes = {o["outcome"].replace(ws, "{ws}"):
+                    "met" if o["posterior"] + 1e-9 >= accept else "not met" if o["against"] else "not confirmed"
+                    for o in got["outcomes"]}
+        result = {"done": got["done"], "outcomes": outcomes}
+        return {"id": case["id"], "expect": case["expect"], "got": result, "match": result == case["expect"],
+                "posterior": round(got["posterior"], 4),
+                "issues": [i.replace(ws, "{ws}") for i in got["issues"]]}
 
 
 def main():
     build, label = sys.argv[1], sys.argv[2]
     sys.path.insert(0, build)
-    from study_gates import RunGates
+    import study_gates
     battery = json.loads((ROOT / "tests" / "gate_battery.json").read_text())
-    results = [asyncio.run(run_case(RunGates, battery, case)) for case in battery["cases"]]
-    results += [run_trace_case(RunGates, case) for case in battery.get("traceability", [])]
+    results = [asyncio.run(run_case(study_gates.RunGates, battery, case)) for case in battery["cases"]]
+    results += [asyncio.run(run_completion_case(study_gates, case)) for case in battery["completion"]]
     matched = sum(bool(r.get("match")) for r in results)
     summary = {"label": label, "cases": len(results), "matched": matched, "results": results}
     out = ROOT / "results" / f"gate_battery_{label}.json"
@@ -93,7 +119,7 @@ def main():
     for r in results:
         if not r.get("match"):
             print(f"{r['id']}: expected {r.get('expect')}, got {r.get('got')} | "
-                  f"{r.get('reason') or r.get('error') or r.get('hard_failures')}")
+                  f"{r.get('reason') or r.get('error') or r.get('issues')}")
     print(f"{matched} of {len(results)} cases match the stated verdicts")
     sys.exit(0 if matched == len(results) else 1)
 

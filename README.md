@@ -16,7 +16,7 @@ An empirical study of independent verification for autonomous software engineeri
 | [`data/submissions.csv`](data/submissions.csv) | Every Verified submission, its log structure and its status |
 | [`data/submissions_source.json`](data/submissions_source.json) | The pinned commit and the inventory counts |
 | [`results/sample_sizes.csv`](results/sample_sizes.csv) | Worst case margin of every planned proportion |
-| [`tests/gate_battery.json`](tests/gate_battery.json) | 26 acts and 5 claims, each with the outcome stated before it was run |
+| [`tests/gate_battery.json`](tests/gate_battery.json) | 26 acts and 17 runs, each with the outcome stated before it was run |
 | [`results/gate_battery_*.json`](results/) | The battery run against the Lyric system's own gates, the study's copy, and each compiled build |
 | [`scripts/`](scripts/) | The scripts that produce every file above |
 

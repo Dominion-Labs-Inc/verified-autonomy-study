@@ -420,144 +420,593 @@
       "why": "Content that names a scheduling location is read as a write there."
     }
   ],
-  "traceability_description": "Claims checked by the traceability gate as an EXECUTION task. 'files' are written to the workspace with their modification time offset in seconds from the start of the case; each tool result's 'timestamp' is offset the same way.",
-  "traceability": [
+  "completion_description": "Runs judged by the completion check, each stated before the battery was run. 'files' are written to the workspace first. Each act is a tool, its arguments and what the tool returned; its record is built by Lyric's own record builder. A write that succeeded is written to disk with what it 'wrote', unless it did not 'land'; its result states the fingerprint of what it wrote. 'end' rewrites files after the acts, as the end state. 'rerun' is what the latest check does when run again in the end state: its exit code, or null when it does not finish; with no 'rerun' no copy can be made. 'expect' gives whether the run is done and each expected outcome's verdict: met (believed past the bar), not met (evidence against it) or not confirmed (nothing fresh has looked).",
+  "completion": [
     {
-      "id": "T01",
-      "files": {
-        "new.py": [
-          "x = 1\n",
-          0
-        ]
-      },
-      "claims": {
-        "files_created": [
-          "new.py"
-        ]
-      },
-      "tool_results": [
-        {
-          "tool": "write_file",
-          "parameters": {
-            "path": "new.py"
-          },
-          "success": true,
-          "output": "",
-          "timestamp": -5
-        }
-      ],
-      "expect": {
-        "passed": true,
-        "score": 1.0
-      },
-      "why": "The claimed file was written by a recorded write."
-    },
-    {
-      "id": "T02",
+      "id": "K01",
       "files": {},
-      "claims": {
-        "files_created": [
-          "missing.py"
-        ]
-      },
-      "tool_results": [],
-      "expect": {
-        "passed": false,
-        "score": 0.0
-      },
-      "why": "The claimed file does not exist and nothing produced it."
-    },
-    {
-      "id": "T03",
-      "files": {
-        "made.py": [
-          "x = 1\n",
-          0
-        ]
-      },
-      "claims": {
-        "files_created": [
-          "made.py"
-        ]
-      },
-      "tool_results": [
-        {
-          "tool": "run_shell_command",
-          "parameters": {
-            "command": "python gen.py"
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/m.py",
+            "content": "value = 2\n"
           },
-          "success": true,
-          "output": "wrote made.py",
-          "timestamp": -5
-        }
+          {
+            "success": true,
+            "wrote": "value = 2\n"
+          }
+        ]
       ],
       "expect": {
-        "passed": true,
-        "score": 0.0
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met"
+        }
       },
-      "why": "A command that names the file and ran before it changed is a weak link: traced, but not counted in the score."
+      "why": "A write that landed, confirmed by reading the file again."
     },
     {
-      "id": "T04",
+      "id": "K02",
       "files": {
-        "orphan.py": [
-          "x = 1\n",
-          0
-        ]
+        "m.py": "value = 1\n"
       },
-      "claims": {
-        "files_modified": [
-          "orphan.py"
-        ]
-      },
-      "tool_results": [
-        {
-          "tool": "run_shell_command",
-          "parameters": {
-            "command": "ls"
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/m.py",
+            "content": "value = 2\n"
           },
-          "success": true,
-          "output": "",
-          "timestamp": -5
-        }
+          {
+            "success": true,
+            "wrote": "value = 2\n",
+            "lands": false
+          }
+        ]
       ],
       "expect": {
-        "passed": false,
-        "score": 0.0
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "not met"
+        }
       },
-      "why": "The claimed file exists, but no recorded action produced it."
+      "why": "A write reported as done that never changed a file that was already there."
     },
     {
-      "id": "T05",
+      "id": "K03",
       "files": {
-        "new.py": [
-          "x = 1\n",
-          0
-        ]
+        "m.py": "value = 1\n"
       },
-      "claims": {
-        "files_created": [
-          "new.py"
+      "acts": [
+        [
+          "patch_file",
+          {
+            "file_path": "{ws}/m.py",
+            "old_string": "value = 1",
+            "new_string": "value = 2"
+          },
+          {
+            "success": true,
+            "wrote": "value = 2\n"
+          }
+        ]
+      ],
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met"
+        }
+      },
+      "why": "A patch, confirmed by what the file holds."
+    },
+    {
+      "id": "K04",
+      "files": {
+        "old.txt": "x\n"
+      },
+      "acts": [
+        [
+          "delete_file",
+          {
+            "path": "{ws}/old.txt",
+            "confirm": true
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/old.txt": "met"
+        }
+      },
+      "why": "A removal, confirmed by the file being gone."
+    },
+    {
+      "id": "K05",
+      "files": {},
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/tmp.txt",
+            "content": "scratch\n"
+          },
+          {
+            "success": true,
+            "wrote": "scratch\n"
+          }
         ],
-        "artifact_hashes": {
-          "new.py": "a1621be95040239ee14362c16e20510ddc20f527d772d823b2a1679b33f5cd74"
-        }
-      },
-      "tool_results": [
-        {
-          "tool": "write_file",
-          "parameters": {
-            "path": "new.py"
+        [
+          "delete_file",
+          {
+            "path": "{ws}/tmp.txt",
+            "confirm": true
           },
-          "success": true,
-          "output": "",
-          "timestamp": -5
-        }
+          {
+            "success": true
+          }
+        ]
       ],
       "expect": {
-        "passed": false
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/tmp.txt": "met"
+        }
       },
-      "why": "The claimed content does not match what is on disk."
+      "why": "The last act on a file decides what should be true of it."
+    },
+    {
+      "id": "K06",
+      "files": {
+        "c.txt": "before\n"
+      },
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/a.txt",
+            "content": "a\n"
+          },
+          {
+            "success": true,
+            "wrote": "a\n"
+          }
+        ],
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/b.txt",
+            "content": "b\n"
+          },
+          {
+            "success": true,
+            "wrote": "b\n"
+          }
+        ],
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/c.txt",
+            "content": "c\n"
+          },
+          {
+            "success": false,
+            "error": "Permission denied"
+          }
+        ]
+      ],
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/a.txt": "met",
+          "effect:{ws}/b.txt": "met",
+          "effect:{ws}/c.txt": "not met"
+        }
+      },
+      "why": "Two writes that landed do not outvote a third that failed."
+    },
+    {
+      "id": "K07",
+      "files": {
+        "check.py": "import m\n"
+      },
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/m.py",
+            "content": "value = 2\n"
+          },
+          {
+            "success": true,
+            "wrote": "value = 2\n"
+          }
+        ],
+        [
+          "run_shell_command",
+          {
+            "command": "python check.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "rerun": 0,
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "met"
+        }
+      },
+      "why": "An edit and its check, which passes again in the end state."
+    },
+    {
+      "id": "K08",
+      "files": {
+        "check.py": "import m\n"
+      },
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/m.py",
+            "content": "value = 2\n"
+          },
+          {
+            "success": true,
+            "wrote": "value = 2\n"
+          }
+        ],
+        [
+          "run_shell_command",
+          {
+            "command": "python check.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "rerun": 1,
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "not met"
+        }
+      },
+      "why": "The log says the check passed; run again in the end state it fails, and the landed edit does not outvote it."
+    },
+    {
+      "id": "K09",
+      "files": {
+        "check.py": "import m\n"
+      },
+      "acts": [
+        [
+          "run_shell_command",
+          {
+            "command": "python check.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": false,
+            "error": "Command exited with code 1"
+          }
+        ],
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/m.py",
+            "content": "value = 2\n"
+          },
+          {
+            "success": true,
+            "wrote": "value = 2\n"
+          }
+        ],
+        [
+          "run_shell_command",
+          {
+            "command": "python check.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "rerun": 0,
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "met"
+        }
+      },
+      "why": "A check that failed, then passed after the fix: the latest counts."
+    },
+    {
+      "id": "K10",
+      "files": {
+        "m.py": "value = 1\n",
+        "check.py": "import m\n"
+      },
+      "acts": [
+        [
+          "run_shell_command",
+          {
+            "command": "sed -i 's/1/2/' m.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ],
+        [
+          "run_shell_command",
+          {
+            "command": "python check.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "rerun": 0,
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "shell:{ws}": "met",
+          "check:{ws}": "met"
+        }
+      },
+      "why": "A shell edit, confirmed by the check that passes where it ran."
+    },
+    {
+      "id": "K11",
+      "files": {
+        "m.py": "value = 1\n"
+      },
+      "acts": [
+        [
+          "run_shell_command",
+          {
+            "command": "sed -i 's/1/2/' m.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "shell:{ws}": "not confirmed"
+        }
+      },
+      "why": "A shell edit nothing checked: not confirmed."
+    },
+    {
+      "id": "K12",
+      "files": {
+        "check.py": "import m\n"
+      },
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/m.py",
+            "content": "value = 2\n"
+          },
+          {
+            "success": true,
+            "wrote": "value = 2\n"
+          }
+        ],
+        [
+          "run_shell_command",
+          {
+            "command": "python check.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "not confirmed"
+        }
+      },
+      "why": "No copy of the end state can be made, so the check rests on the log alone."
+    },
+    {
+      "id": "K13",
+      "files": {
+        "check.py": "import m\n"
+      },
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/m.py",
+            "content": "value = 2\n"
+          },
+          {
+            "success": true,
+            "wrote": "value = 2\n"
+          }
+        ],
+        [
+          "run_shell_command",
+          {
+            "command": "python check.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "rerun": null,
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "check:{ws}": "not met"
+        }
+      },
+      "why": "A check that does not finish when run again is against."
+    },
+    {
+      "id": "K14",
+      "files": {},
+      "acts": [
+        [
+          "read_file",
+          {
+            "file_path": "{ws}/missing.txt"
+          },
+          {
+            "success": false,
+            "error": "File not found"
+          }
+        ],
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/a.txt",
+            "content": "a\n"
+          },
+          {
+            "success": true,
+            "wrote": "a\n"
+          }
+        ]
+      ],
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "effect:{ws}/a.txt": "met"
+        }
+      },
+      "why": "A look that failed is no evidence about anything."
+    },
+    {
+      "id": "K15",
+      "files": {
+        "note.txt": "the meeting moved to Thursday\n"
+      },
+      "acts": [
+        [
+          "read_file",
+          {
+            "file_path": "{ws}/note.txt"
+          },
+          {
+            "success": true,
+            "read": true
+          }
+        ]
+      ],
+      "expect": {
+        "done": true,
+        "outcomes": {
+          "read:{ws}/note.txt": "met"
+        }
+      },
+      "why": "Work that only reads is done when reading again agrees."
+    },
+    {
+      "id": "K16",
+      "files": {
+        "out.txt": "x\n"
+      },
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/m.py",
+            "content": "value = 2\n"
+          },
+          {
+            "success": true,
+            "wrote": "value = 2\n"
+          }
+        ],
+        [
+          "run_shell_command",
+          {
+            "command": "pytest && rm out.txt",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "rerun": 0,
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "met",
+          "shell:{ws}": "not confirmed"
+        }
+      },
+      "why": "A test run that also removes a file is not a check, so nothing confirms it."
+    },
+    {
+      "id": "K17",
+      "files": {
+        "check.py": "import m\n"
+      },
+      "acts": [
+        [
+          "write_file",
+          {
+            "file_path": "{ws}/m.py",
+            "content": "value = 2\n"
+          },
+          {
+            "success": true,
+            "wrote": "value = 2\n"
+          }
+        ],
+        [
+          "run_shell_command",
+          {
+            "command": "python check.py",
+            "working_directory": "{ws}"
+          },
+          {
+            "success": true
+          }
+        ]
+      ],
+      "rerun": 0,
+      "verify_bar": 0.85,
+      "expect": {
+        "done": false,
+        "outcomes": {
+          "effect:{ws}/m.py": "not confirmed",
+          "check:{ws}": "not confirmed"
+        }
+      },
+      "why": "At its most cautious the bar is 0.99, and a report with one fresh look (0.975) does not reach it."
     }
   ]
 }
