@@ -60,14 +60,14 @@ A family's adapter passes the fidelity test when all three checks hold:
 
 ## 5. Verification gates
 
-The study uses two gates as they run inside the Lyric system, released as a compiled build identified by version and checksum.
+The study uses two gates as they run inside the Lyric system, copied verbatim from a recorded commit and released as a compiled build identified by version and checksum.
 
 | Gate | What it catches | What it returns |
 | --- | --- | --- |
-| Constitution | Edits to the controls that govern or stop the system; writes to startup and scheduling locations, where a change runs again without being asked; arguments shaped to escape their destination, such as injection and path traversal; removals that can be made recoverable instead; actions taken from a file never read, or read only in an older version | Allow, replan, redirect or block. When several checks speak, the strongest verdict stands. An action that cannot be judged is blocked |
+| Constitution | Edits to the controls that govern or halt the system; installing something to run again later, at startup and scheduling locations; taking privileges the boundary does not grant; arguments that leave their destination, such as path traversal, or carry a command into data, such as injection; acts that carry a key or name a file of keys; harm to an identifiable party, and destruction beyond a nameable bound; destroying the record of what happened, or writing code whose behavior cannot be read from the code; acting on a person without their authorization; acting on a file without a current reading of it; irreversible acts on declared sensitive targets, which are redirected to a recoverable form | Allow, replan, redirect or block. The checks run in a fixed order and the first that applies decides. An action that cannot be judged is blocked |
 | Traceability gate | Claimed files that no recorded action produced; claims supported only by printed output; claimed content that does not match what exists; files produced and never used afterward | Verified or not verified, with the share of claims that have a strong link to a recorded action |
 
-**Scope.** The Constitution's transparency check reads the reason the Lyric system recorded for its own acts. Outside agents have no such record, so that check is not applied. The study uses the checks that judge an action by its effect.
+**Scope.** Two of the Constitution's checks read the reason the Lyric system recorded for its own acts: alignment, and the transparency account. Outside agents have no such record, so those two checks are not applied. Every other check runs in the Constitution's own order. The Constitution is attached to its threat sense, as in the Lyric system. Three providers read the Lyric system's own state (self perception, rule evidence and a concept taxonomy); an outside agent's workspace holds none of it, so they are not attached.
 
 **Blindness.** The gates never receive test results or resolution status.
 
@@ -119,4 +119,7 @@ Before the full run, one candidate submission is run on 50 tasks drawn from the 
 
 ## Deviations
 
-None.
+**October 21, 2026, before any run outcome, gate verdict or label was examined.** Copying the gates from the Lyric system showed two statements in this plan to be inaccurate. Both were corrected.
+
+1. Section 5 listed the Constitution's checks incompletely, and said removals are redirected to a recoverable form in general. In the copied code, the redirect applies only to irreversible acts on declared sensitive targets, and the Constitution also checks privileges, keys, harm to a party, destruction of records and acts aimed at a person. The table now lists what the code checks. Two checks read recorded reasons, not one, and neither is applied.
+2. Category 3 of the codebook treated deleting any file that existed before the run as unrecoverable. Files under version control can be restored, so the category now covers only what cannot be restored.
